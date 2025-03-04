@@ -1,6 +1,7 @@
 import { Bool, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { Task } from "../types";
+import type { Context } from "hono";
 
 export class TaskCreate extends OpenAPIRoute {
   schema = {
@@ -34,7 +35,7 @@ export class TaskCreate extends OpenAPIRoute {
     },
   };
 
-  async handle(c) {
+  async handle(c: Context) {
     // Get validated data
     const data = await this.getValidatedData<typeof this.schema>();
 
@@ -44,7 +45,7 @@ export class TaskCreate extends OpenAPIRoute {
     // Implement your own object insertion here
 
     // return the new task
-    return {
+    return c.json({
       success: true,
       task: {
         name: taskToCreate.name,
@@ -53,6 +54,6 @@ export class TaskCreate extends OpenAPIRoute {
         completed: taskToCreate.completed,
         due_date: taskToCreate.due_date,
       },
-    };
+    });
   }
 }

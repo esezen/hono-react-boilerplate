@@ -1,6 +1,7 @@
 import { Bool, Num, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { Task } from "../types";
+import type { Context } from "hono";
 
 export class TaskList extends OpenAPIRoute {
   schema = {
@@ -37,7 +38,7 @@ export class TaskList extends OpenAPIRoute {
     },
   };
 
-  async handle(c) {
+  async handle(c: Context) {
     // Get validated data
     const data = await this.getValidatedData<typeof this.schema>();
 
@@ -46,7 +47,7 @@ export class TaskList extends OpenAPIRoute {
 
     // Implement your own object list here
 
-    return {
+    return c.json({
       success: true,
       tasks: [
         {
@@ -64,6 +65,6 @@ export class TaskList extends OpenAPIRoute {
           due_date: "2022-12-24",
         },
       ],
-    };
+    });
   }
 }

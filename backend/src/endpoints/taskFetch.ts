@@ -1,6 +1,7 @@
 import { Bool, OpenAPIRoute, Str } from "chanfana";
 import { z } from "zod";
 import { Task } from "../types";
+import type { Context } from "hono";
 
 export class TaskFetch extends OpenAPIRoute {
   schema = {
@@ -43,7 +44,7 @@ export class TaskFetch extends OpenAPIRoute {
     },
   };
 
-  async handle(c) {
+  async handle(c: Context) {
     // Get validated data
     const data = await this.getValidatedData<typeof this.schema>();
 
@@ -67,7 +68,7 @@ export class TaskFetch extends OpenAPIRoute {
       );
     }
 
-    return {
+    return c.json({
       success: true,
       task: {
         name: "my task",
@@ -76,6 +77,6 @@ export class TaskFetch extends OpenAPIRoute {
         completed: false,
         due_date: new Date().toISOString().slice(0, 10),
       },
-    };
+    });
   }
 }
