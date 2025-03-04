@@ -1,0 +1,13 @@
+{
+  "name": "hono-react-boilerplate",
+  "scripts": {
+    "lint": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
