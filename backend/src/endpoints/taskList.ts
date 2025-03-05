@@ -1,7 +1,9 @@
-import { Bool, Num, OpenAPIRoute } from "chanfana";
+import { Bool, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
-import { Task } from "../types";
 import type { Context } from "hono";
+import { database } from "db";
+import { tasks, taskSelectSchema } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 export class TaskList extends OpenAPIRoute {
   schema = {
@@ -9,10 +11,6 @@ export class TaskList extends OpenAPIRoute {
     summary: "List Tasks",
     request: {
       query: z.object({
-        page: Num({
-          description: "Page number",
-          default: 0,
-        }),
         isCompleted: Bool({
           description: "Filter by completed flag",
           required: false,
@@ -28,7 +26,7 @@ export class TaskList extends OpenAPIRoute {
               series: z.object({
                 success: Bool(),
                 result: z.object({
-                  tasks: Task.array(),
+                  tasks: taskSelectSchema.array(),
                 }),
               }),
             }),
@@ -39,32 +37,28 @@ export class TaskList extends OpenAPIRoute {
   };
 
   async handle(c: Context) {
-    // Get validated data
     const data = await this.getValidatedData<typeof this.schema>();
+    const { isCompleted } = data.query;
+    const db = database(c);
 
-    // Retrieve the validated parameters
-    const { page, isCompleted } = data.query;
+    try {
+      const tasksList = await db.query.tasks.findMany({
+        where: eq(tasks.completed, isCompleted),
+      });
 
-    // Implement your own object list here
-
-    return c.json({
-      success: true,
-      tasks: [
+      return c.json({
+        tasks: tasksList,
+      });
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+      return Response.json(
         {
-          name: "Clean my room",
-          slug: "clean-room",
-          description: null,
-          completed: false,
-          due_date: "2025-01-05",
+          error: "Failed to fetch task",
         },
         {
-          name: "Build something awesome with Cloudflare Workers",
-          slug: "cloudflare-workers",
-          description: "Lorem Ipsum",
-          completed: true,
-          due_date: "2022-12-24",
+          status: 500,
         },
-      ],
-    });
+      );
+    }
   }
 }

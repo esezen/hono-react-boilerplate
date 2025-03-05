@@ -1,7 +1,10 @@
 import { Bool, OpenAPIRoute, Str } from "chanfana";
 import { z } from "zod";
-import { Task } from "../types";
+import { taskSelectSchema } from "../db/schema";
 import type { Context } from "hono";
+import { eq } from "drizzle-orm";
+import { tasks } from "../db/schema";
+import { database } from "db";
 
 export class TaskFetch extends OpenAPIRoute {
   schema = {
@@ -21,7 +24,7 @@ export class TaskFetch extends OpenAPIRoute {
               series: z.object({
                 success: Bool(),
                 result: z.object({
-                  task: Task,
+                  task: taskSelectSchema,
                 }),
               }),
             }),
@@ -45,38 +48,28 @@ export class TaskFetch extends OpenAPIRoute {
   };
 
   async handle(c: Context) {
-    // Get validated data
     const data = await this.getValidatedData<typeof this.schema>();
-
-    // Retrieve the validated slug
     const { taskSlug } = data.params;
+    const db = database(c);
 
-    // Implement your own object fetch here
+    try {
+      const task = await db.query.tasks.findFirst({
+        where: eq(tasks.slug, taskSlug),
+      });
 
-    const exists = true;
-
-    // @ts-ignore: check if the object exists
-    if (exists === false) {
+      return c.json({
+        task,
+      });
+    } catch (error) {
+      console.error("Error fetching task:", error);
       return Response.json(
         {
-          success: false,
-          error: "Object not found",
+          error: "Failed to fetch task",
         },
         {
-          status: 404,
+          status: 500,
         },
       );
     }
-
-    return c.json({
-      success: true,
-      task: {
-        name: "my task",
-        slug: taskSlug,
-        description: "this needs to be done",
-        completed: false,
-        due_date: new Date().toISOString().slice(0, 10),
-      },
-    });
   }
 }

@@ -2,6 +2,8 @@ import { Bool, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
 import { Task } from "../types";
 import type { Context } from "hono";
+import { database } from "db";
+import { tasks } from "../db/schema";
 
 export class TaskCreate extends OpenAPIRoute {
   schema = {
@@ -32,6 +34,19 @@ export class TaskCreate extends OpenAPIRoute {
           },
         },
       },
+      "400": {
+        description: "Bad request",
+        content: {
+          "application/json": {
+            schema: z.object({
+              series: z.object({
+                success: Bool(),
+                error: z.string(),
+              }),
+            }),
+          },
+        },
+      },
     },
   };
 
@@ -41,19 +56,29 @@ export class TaskCreate extends OpenAPIRoute {
 
     // Retrieve the validated request body
     const taskToCreate = data.body;
+    const db = database(c);
 
-    // Implement your own object insertion here
+    try {
+      const result = await db.insert(tasks).values(taskToCreate).returning();
 
-    // return the new task
-    return c.json({
-      success: true,
-      task: {
-        name: taskToCreate.name,
-        slug: taskToCreate.slug,
-        description: taskToCreate.description,
-        completed: taskToCreate.completed,
-        due_date: taskToCreate.due_date,
-      },
-    });
+      // Return the new task
+      return c.json({
+        success: true,
+        result: {
+          task: result,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating task:", error);
+      return c.json(
+        {
+          success: false,
+          error: "Failed to create task",
+        },
+        {
+          status: 500,
+        },
+      );
+    }
   }
 }

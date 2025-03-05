@@ -5,8 +5,12 @@ import { TaskDelete } from "./endpoints/taskDelete";
 import { TaskFetch } from "./endpoints/taskFetch";
 import { TaskList } from "./endpoints/taskList";
 
+type Bindings = {
+  DB: D1Database;
+};
+
 // Start a Hono app
-const app = new Hono();
+const app = new Hono<{ Bindings: Bindings }>();
 
 // Setup OpenAPI registry
 const openapi = fromHono(app, {

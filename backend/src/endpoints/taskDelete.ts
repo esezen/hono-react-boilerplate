@@ -1,7 +1,10 @@
 import { Bool, OpenAPIRoute, Str } from "chanfana";
 import { z } from "zod";
-import { Task } from "../types";
+import { taskSelectSchema } from "../db/schema";
 import type { Context } from "hono";
+import { eq } from "drizzle-orm";
+import { tasks } from "../db/schema";
+import { database } from "db";
 
 export class TaskDelete extends OpenAPIRoute {
   schema = {
@@ -21,7 +24,7 @@ export class TaskDelete extends OpenAPIRoute {
               series: z.object({
                 success: Bool(),
                 result: z.object({
-                  task: Task,
+                  task: taskSelectSchema,
                 }),
               }),
             }),
@@ -32,26 +35,31 @@ export class TaskDelete extends OpenAPIRoute {
   };
 
   async handle(c: Context) {
-    // Get validated data
     const data = await this.getValidatedData<typeof this.schema>();
-
-    // Retrieve the validated slug
     const { taskSlug } = data.params;
+    const db = database(c);
 
-    // Implement your own object deletion here
+    try {
+      const task = await db
+        .delete(tasks)
+        .where(eq(tasks.slug, taskSlug))
+        .returning();
 
-    // Return the deleted task for confirmation
-    return {
-      result: {
-        task: {
-          name: "Build something awesome with Cloudflare Workers",
-          slug: taskSlug,
-          description: "Lorem Ipsum",
-          completed: true,
-          due_date: "2022-12-24",
+      return c.json({
+        result: {
+          task,
         },
-      },
-      success: true,
-    };
+      });
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      return c.json(
+        {
+          error: "Failed to delete task",
+        },
+        {
+          status: 500,
+        },
+      );
+    }
   }
 }
