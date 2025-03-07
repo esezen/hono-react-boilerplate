@@ -1,7 +1,8 @@
 {
   "name": "hono-react-boilerplate",
   "scripts": {
-    "lint": "biome check --write ."
+    "lint": "biome check --write .",
+    "dev": "bun run --filter '*' dev"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

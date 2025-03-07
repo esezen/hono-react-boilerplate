@@ -1,27 +1,29 @@
-import { fromHono } from "chanfana";
-import { Hono } from "hono";
-import { TaskCreate } from "./endpoints/taskCreate";
-import { TaskDelete } from "./endpoints/taskDelete";
-import { TaskFetch } from "./endpoints/taskFetch";
-import { TaskList } from "./endpoints/taskList";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import { swaggerUI } from "@hono/swagger-ui";
+import { taskDeleteHandler, taskDeleteRoute } from "endpoints/taskDelete";
+import { taskCreateRoute, taskCreateHandler } from "endpoints/taskCreate";
+import { taskFetchHandler, taskFetchRoute } from "endpoints/taskFetch";
+import { taskListHandler, taskListRoute } from "endpoints/taskList";
 
 type Bindings = {
   DB: D1Database;
 };
 
-// Start a Hono app
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new OpenAPIHono<{ Bindings: Bindings }>();
 
-// Setup OpenAPI registry
-const openapi = fromHono(app, {
-  docs_url: "/",
+app.openapi(taskCreateRoute, taskCreateHandler);
+app.openapi(taskDeleteRoute, taskDeleteHandler);
+app.openapi(taskFetchRoute, taskFetchHandler);
+app.openapi(taskListRoute, taskListHandler);
+
+app.doc("/doc", {
+  openapi: "3.0.0",
+  info: {
+    version: "1.0.0",
+    title: "Task API",
+  },
 });
+app.get("/", swaggerUI({ url: "/doc" }));
 
-// Register OpenAPI endpoints
-openapi.get("/api/tasks", TaskList);
-openapi.post("/api/tasks", TaskCreate);
-openapi.get("/api/tasks/:taskSlug", TaskFetch);
-openapi.delete("/api/tasks/:taskSlug", TaskDelete);
-
-// Export the Hono app
 export default app;
+export type AppType = typeof app;

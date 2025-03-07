@@ -1,84 +1,68 @@
-import { Bool, OpenAPIRoute } from "chanfana";
 import { z } from "zod";
-import { Task } from "../types";
 import type { Context } from "hono";
 import { database } from "db";
-import { tasks } from "../db/schema";
+import { taskInsertSchema, tasks, taskSelectSchema } from "../db/schema";
+import { createRoute } from "@hono/zod-openapi";
 
-export class TaskCreate extends OpenAPIRoute {
-  schema = {
-    tags: ["Tasks"],
-    summary: "Create a new Task",
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: Task,
-          },
+export const taskCreateRoute = createRoute({
+  method: "post",
+  path: "/api/tasks",
+  summary: "Create a new task",
+  tags: ["Tasks"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: taskInsertSchema,
         },
       },
     },
-    responses: {
-      "200": {
-        description: "Returns the created task",
-        content: {
-          "application/json": {
-            schema: z.object({
-              series: z.object({
-                success: Bool(),
-                result: z.object({
-                  task: Task,
-                }),
-              }),
-            }),
-          },
-        },
-      },
-      "400": {
-        description: "Bad request",
-        content: {
-          "application/json": {
-            schema: z.object({
-              series: z.object({
-                success: Bool(),
-                error: z.string(),
-              }),
-            }),
-          },
+  },
+  responses: {
+    200: {
+      description: "Returns the created task",
+      content: {
+        "application/json": {
+          schema: z.object({
+            task: taskSelectSchema,
+          }),
         },
       },
     },
-  };
-
-  async handle(c: Context) {
-    // Get validated data
-    const data = await this.getValidatedData<typeof this.schema>();
-
-    // Retrieve the validated request body
-    const taskToCreate = data.body;
-    const db = database(c);
-
-    try {
-      const result = await db.insert(tasks).values(taskToCreate).returning();
-
-      // Return the new task
-      return c.json({
-        success: true,
-        result: {
-          task: result,
+    500: {
+      description: "Failed",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.string(),
+          }),
         },
-      });
-    } catch (error) {
-      console.error("Error creating task:", error);
-      return c.json(
-        {
-          success: false,
-          error: "Failed to create task",
-        },
-        {
-          status: 500,
-        },
-      );
-    }
+      },
+    },
+  },
+});
+
+export const taskCreateHandler = async (c: Context) => {
+  const taskToCreate = taskInsertSchema.parse(await c.req.json());
+  const db = database(c);
+
+  try {
+    const returnValue = await db.insert(tasks).values(taskToCreate).returning();
+    const result = returnValue[0];
+
+    return c.json(
+      {
+        task: result,
+      },
+      200,
+    );
+  } catch (error) {
+    console.error("Error creating task:", error);
+    return c.json(
+      {
+        error: "Failed to create task",
+      },
+      500,
+    );
   }
-}
+};
