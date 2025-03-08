@@ -2,10 +2,12 @@
   "name": "hono-react-backend",
   "scripts": {
     "dev": "wrangler dev",
+    "build:frontend": "cd ../frontend && bun run build",
+    "predeploy": "bun run build:frontend",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "db:delete": "rm -rf .wrangler/state/v3/d1/",
-    "db:reset": "bun db:delete && wrangler d1 export $DB_NAME --output backup.sql --remote --no-schema && pnpm run db:migrate && wrangler d1 execute $DB_NAME --local --file=backup.sql && rm backup.sql",
+    "db:reset": "bun db:delete && wrangler d1 export $CLOUDFLARE_DB_NAME --output backup.sql --remote --no-schema && pnpm run db:migrate && wrangler d1 execute $CLOUDFLARE_DB_NAME --local --file=backup.sql && rm backup.sql",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply --local DB",
     "db:migrate:production": "drizzle-kit migrate",

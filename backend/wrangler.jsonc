@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "backend",
+  "name": "hono-react-backend",
   "main": "src/index.ts",
   "compatibility_date": "2025-03-03",
   "observability": {
@@ -14,5 +14,9 @@
       "migrations_dir": "drizzle",
       "migrations_table": "__drizzle_migrations"
     }
-  ]
+  ],
+  "assets": {
+    "directory": "../frontend/dist",
+    "binding": "FRONTEND"
+  }
 }
