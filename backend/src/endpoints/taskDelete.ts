@@ -1,48 +1,15 @@
+import { Hono } from "hono";
 import { z } from "zod";
-import { taskSelectSchema } from "../db/schema";
 import type { Context } from "hono";
 import { eq } from "drizzle-orm";
 import { tasks } from "../db/schema";
 import { database } from "db";
-import { createRoute } from "@hono/zod-openapi";
 
 const deleteSchema = z.object({
   slug: z.string({ description: "Task slug" }),
 });
 
-export const taskDeleteRoute = createRoute({
-  method: "delete",
-  path: "/api/tasks/{slug}",
-  summary: "Delete a Task",
-  tags: ["Tasks"],
-  request: {
-    params: deleteSchema,
-  },
-  responses: {
-    200: {
-      description: "Returns if the task was deleted successfully",
-      content: {
-        "application/json": {
-          schema: z.object({
-            task: taskSelectSchema,
-          }),
-        },
-      },
-    },
-    500: {
-      description: "Failed",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-  },
-});
-
-export const taskDeleteHandler = async (c: Context) => {
+const taskDeleteHandler = async (c: Context) => {
   const taskToDelete = deleteSchema.parse(c.req.param());
   const db = database(c);
 
@@ -71,3 +38,5 @@ export const taskDeleteHandler = async (c: Context) => {
     );
   }
 };
+
+export const taskDeleteRoute = new Hono().delete("/:slug", taskDeleteHandler);

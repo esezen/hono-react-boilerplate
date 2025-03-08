@@ -9,8 +9,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "<DATABASE_NAME>",
-      "database_id": "<DATABASE_ID>",
+      "database_name": "boilerplate",
+      "database_id": "118ce7c5-beac-426e-a54d-2c10ee5d4920",
       "migrations_dir": "drizzle",
       "migrations_table": "__drizzle_migrations"
     }

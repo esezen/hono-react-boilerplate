@@ -1,29 +1,25 @@
-import { OpenAPIHono } from "@hono/zod-openapi";
-import { swaggerUI } from "@hono/swagger-ui";
-import { taskDeleteHandler, taskDeleteRoute } from "endpoints/taskDelete";
-import { taskCreateRoute, taskCreateHandler } from "endpoints/taskCreate";
-import { taskFetchHandler, taskFetchRoute } from "endpoints/taskFetch";
-import { taskListHandler, taskListRoute } from "endpoints/taskList";
+import { Hono } from "hono";
+import { logger } from "hono/logger";
 
-type Bindings = {
-  DB: D1Database;
-};
+import { taskDeleteRoute } from "endpoints/taskDelete";
+import { taskCreateRoute } from "endpoints/taskCreate";
+import { taskFetchRoute } from "endpoints/taskFetch";
+import { taskListRoute } from "endpoints/taskList";
 
-const app = new OpenAPIHono<{ Bindings: Bindings }>();
+const app = new Hono();
 
-app.openapi(taskCreateRoute, taskCreateHandler);
-app.openapi(taskDeleteRoute, taskDeleteHandler);
-app.openapi(taskFetchRoute, taskFetchHandler);
-app.openapi(taskListRoute, taskListHandler);
+app.use("*", logger());
 
-app.doc("/doc", {
-  openapi: "3.0.0",
-  info: {
-    version: "1.0.0",
-    title: "Task API",
-  },
-});
-app.get("/", swaggerUI({ url: "/doc" }));
+const routes = [
+  taskListRoute,
+  taskDeleteRoute,
+  taskFetchRoute,
+  taskCreateRoute,
+];
+
+for (const route of routes) {
+  app.basePath("/api").route("/tasks", route);
+}
 
 export default app;
 export type AppType = typeof app;

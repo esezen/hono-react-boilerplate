@@ -14,8 +14,6 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@hono/swagger-ui": "^0.5.1",
-    "@hono/zod-openapi": "^0.19.2",
     "drizzle-orm": "^0.40.0",
     "drizzle-zod": "^0.7.0",
     "hono": "^4.4.7",
@@ -26,7 +24,6 @@
     "@types/node": "20.8.3",
     "@types/service-worker-mock": "^2.0.1",
     "drizzle-kit": "^0.30.5",
-    "tsx": "^4.19.3",
     "wrangler": "^3.112.0"
   }
 }

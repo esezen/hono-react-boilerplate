@@ -1,10 +1,9 @@
-import { z } from "zod";
-import { taskSelectSchema } from "../db/schema";
+import { Hono } from "hono";
 import type { Context } from "hono";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { tasks } from "../db/schema";
 import { database } from "db";
-import { createRoute } from "@hono/zod-openapi";
 
 const listSchema = z.object({
   isCompleted: z
@@ -14,39 +13,7 @@ const listSchema = z.object({
     .optional(),
 });
 
-export const taskListRoute = createRoute({
-  method: "get",
-  path: "/api/tasks",
-  summary: "List Tasks",
-  tags: ["Tasks"],
-  request: {
-    query: listSchema,
-  },
-  responses: {
-    200: {
-      description: "Returns a list of tasks",
-      content: {
-        "application/json": {
-          schema: z.object({
-            tasks: taskSelectSchema.array(),
-          }),
-        },
-      },
-    },
-    500: {
-      description: "Failed",
-      content: {
-        "application/json": {
-          schema: z.object({
-            error: z.string(),
-          }),
-        },
-      },
-    },
-  },
-});
-
-export const taskListHandler = async (c: Context) => {
+const taskListHandler = async (c: Context) => {
   const params = listSchema.parse(c.req.query());
   const { isCompleted } = params;
   const db = database(c);
@@ -77,3 +44,5 @@ export const taskListHandler = async (c: Context) => {
     );
   }
 };
+
+export const taskListRoute = new Hono().get("/", taskListHandler);
