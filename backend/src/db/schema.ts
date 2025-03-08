@@ -12,3 +12,5 @@ export const tasks = sqliteTable("tasks", {
 
 export const taskSelectSchema = createSelectSchema(tasks);
 export const taskInsertSchema = createInsertSchema(tasks);
+
+export type Task = typeof tasks.$inferSelect;

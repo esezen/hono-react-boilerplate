@@ -12,6 +12,7 @@
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as CreateImport } from './routes/create'
+import { Route as TaskSlugImport } from './routes/$taskSlug'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
@@ -19,6 +20,12 @@ import { Route as IndexImport } from './routes/index'
 const CreateRoute = CreateImport.update({
   id: '/create',
   path: '/create',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const TaskSlugRoute = TaskSlugImport.update({
+  id: '/$taskSlug',
+  path: '/$taskSlug',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -39,6 +46,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexImport
       parentRoute: typeof rootRoute
     }
+    '/$taskSlug': {
+      id: '/$taskSlug'
+      path: '/$taskSlug'
+      fullPath: '/$taskSlug'
+      preLoaderRoute: typeof TaskSlugImport
+      parentRoute: typeof rootRoute
+    }
     '/create': {
       id: '/create'
       path: '/create'
@@ -53,36 +67,41 @@ declare module '@tanstack/react-router' {
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$taskSlug': typeof TaskSlugRoute
   '/create': typeof CreateRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$taskSlug': typeof TaskSlugRoute
   '/create': typeof CreateRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
+  '/$taskSlug': typeof TaskSlugRoute
   '/create': typeof CreateRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/create'
+  fullPaths: '/' | '/$taskSlug' | '/create'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/create'
-  id: '__root__' | '/' | '/create'
+  to: '/' | '/$taskSlug' | '/create'
+  id: '__root__' | '/' | '/$taskSlug' | '/create'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TaskSlugRoute: typeof TaskSlugRoute
   CreateRoute: typeof CreateRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TaskSlugRoute: TaskSlugRoute,
   CreateRoute: CreateRoute,
 }
 
@@ -97,11 +116,15 @@ export const routeTree = rootRoute
       "filePath": "__root.tsx",
       "children": [
         "/",
+        "/$taskSlug",
         "/create"
       ]
     },
     "/": {
       "filePath": "index.tsx"
+    },
+    "/$taskSlug": {
+      "filePath": "$taskSlug.tsx"
     },
     "/create": {
       "filePath": "create.tsx"
